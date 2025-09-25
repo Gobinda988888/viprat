@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connected Devices Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .device-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .device-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .device-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .device-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+        
+        .device-info h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .device-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-online {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-offline {
+            background: #f44336;
+            color: white;
+        }
+        
+        .device-details {
+            margin: 15px 0;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .detail-value {
+            color: #333;
+        }
+        
+        .device-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .no-devices {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin-top: 50px;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin-top: 50px;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📱 Connected Devices</h1>
+        <p>Monitor and control your connected Android devices</p>
+    </div>
+    
+    <div id="deviceContainer">
+        <div class="loading">Loading devices...</div>
+    </div>
+    
+    <button class="refresh-btn" onclick="loadDevices()" title="Refresh Devices">
+        🔄
+    </button>
+
+    <script>
+        function loadDevices() {
+            document.getElementById('deviceContainer').innerHTML = '<div class="loading">Loading devices...</div>';
+            
+            fetch('/api/devices')
+                .then(response => response.json())
+                .then(data => {
+                    displayDevices(data.devices);
+                })
+                .catch(error => {
+                    document.getElementById('deviceContainer').innerHTML = '<div class="no-devices">❌ Failed to load devices</div>';
+                });
+        }
+        
+        function displayDevices(devices) {
+            const container = document.getElementById('deviceContainer');
+            
+            if (devices.length === 0) {
+                container.innerHTML = '<div class="no-devices">📱 No devices connected</div>';
+                return;
+            }
+            
+            const devicesGrid = document.createElement('div');
+            devicesGrid.className = 'devices-grid';
+            
+            devices.forEach(device => {
+                const deviceCard = createDeviceCard(device);
+                devicesGrid.appendChild(deviceCard);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(devicesGrid);
+        }
+        
+        function createDeviceCard(device) {
+            const card = document.createElement('div');
+            card.className = 'device-card';
+            
+            const batteryIcon = getBatteryIcon(device.battery);
+            const statusClass = 'status-online'; // Assume online since it's in the list
+            
+            card.innerHTML = `
+                <div class="device-header">
+                    <div class="device-icon">📱</div>
+                    <div class="device-info">
+                        <h3>${device.model}</h3>
+                        <span class="device-status ${statusClass}">Online</span>
+                    </div>
+                </div>
+                
+                <div class="device-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Battery:</span>
+                        <span class="detail-value">${batteryIcon} ${device.battery}%</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Android Version:</span>
+                        <span class="detail-value">${device.version}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Brightness:</span>
+                        <span class="detail-value">${device.brightness}%</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Provider:</span>
+                        <span class="detail-value">${device.provider}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Device ID:</span>
+                        <span class="detail-value">${device.id.substring(0, 8)}...</span>
+                    </div>
+                </div>
+                
+                <div class="device-actions">
+                    <a href="/screen-monitor?device=${device.id}" class="btn btn-primary">
+                        📺 Screen Monitor
+                    </a>
+                    <button class="btn btn-success" onclick="takeScreenshot('${device.id}')">
+                        📸 Screenshot
+                    </button>
+                    <button class="btn btn-warning" onclick="showDeviceMenu('${device.id}')">
+                        ⚙️ Controls
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function getBatteryIcon(battery) {
+            if (battery >= 80) return '🔋';
+            if (battery >= 50) return '🔋';
+            if (battery >= 20) return '🪫';
+            return '🪫';
+        }
+        
+        function takeScreenshot(deviceId) {
+            fetch('/api/screenshot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ deviceId: deviceId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('📸 Screenshot requested! Check Telegram for the image.');
+                } else {
+                    alert('❌ Failed to take screenshot: ' + data.message);
+                }
+            });
+        }
+        
+        function showDeviceMenu(deviceId) {
+            alert('🚧 Advanced device controls coming soon!\\n\\nFor now, use Telegram bot for full device control.');
+        }
+        
+        // Load devices on page load
+        window.onload = function() {
+            loadDevices();
+            // Auto-refresh every 30 seconds
+            setInterval(loadDevices, 30000);
+        };
+    </script>
+</body>
+</html>

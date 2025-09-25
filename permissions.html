@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Settings Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .device-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .device-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .device-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5em;
+        }
+
+        .device-details h3 {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .device-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-online {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-offline {
+            background: #f44336;
+            color: white;
+        }
+
+        .permission-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-auto {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            color: white;
+        }
+
+        .btn-special {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .btn-status {
+            background: linear-gradient(45deg, #2196f3, #1976d2);
+            color: white;
+        }
+
+        .btn-force {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .permission-status {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #4caf50;
+        }
+
+        .notification.error {
+            background: #f44336;
+        }
+
+        .notification.info {
+            background: #2196f3;
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .devices-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .permission-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Device Settings Manager</h1>
+            <p>Smart Device Configuration and Optimization</p>
+        </div>
+
+        <div class="stats-section">
+            <h3 style="margin-bottom: 20px;">📊 System Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDevices">0</div>
+                    <div>Total Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="onlineDevices">0</div>
+                    <div>Online</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="permissionRequests">0</div>
+                    <div>Permission Requests</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="successRate">100%</div>
+                    <div>Success Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="devicesContainer" class="devices-grid">
+            <!-- Devices will be populated here -->
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadDevices()" title="Refresh Devices">
+        🔄
+    </button>
+
+    <script>
+        let devices = new Map();
+        let permissionRequests = 0;
+        let successfulRequests = 0;
+
+        // Load devices on page load
+        window.addEventListener('load', function() {
+            loadDevices();
+            setInterval(loadDevices, 5000); // Auto-refresh every 5 seconds
+        });
+
+        async function loadDevices() {
+            try {
+                const response = await fetch('/devices');
+                const data = await response.json();
+                
+                devices.clear();
+                data.forEach(device => {
+                    devices.set(device.uuid, device);
+                });
+                
+                renderDevices();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                showNotification('Failed to load devices', 'error');
+            }
+        }
+
+        function renderDevices() {
+            const container = document.getElementById('devicesContainer');
+            container.innerHTML = '';
+
+            if (devices.size === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+                        <h3>📱 No devices connected</h3>
+                        <p>Install and run the Android app to see devices here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            devices.forEach((device, uuid) => {
+                const deviceCard = createDeviceCard(device);
+                container.appendChild(deviceCard);
+            });
+        }
+
+        function createDeviceCard(device) {
+            const card = document.createElement('div');
+            card.className = 'device-card';
+            card.innerHTML = `
+                <div class="device-info">
+                    <div class="device-icon">📱</div>
+                    <div class="device-details">
+                        <h3>${device.model || 'Unknown Device'}</h3>
+                        <span class="device-status ${device.isOnline ? 'status-online' : 'status-offline'}">
+                            ${device.isOnline ? '🟢 Online' : '🔴 Offline'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="permission-controls">
+                    <button class="btn btn-auto" onclick="autoGrantPermissions('${device.uuid}')" ${!device.isOnline ? 'disabled' : ''}>
+                        🔓 Auto Grant
+                    </button>
+                    <button class="btn btn-special" onclick="grantSpecialPermissions('${device.uuid}')" ${!device.isOnline ? 'disabled' : ''}>
+                        🛡️ Special
+                    </button>
+                    <button class="btn btn-status" onclick="checkPermissionStatus('${device.uuid}')" ${!device.isOnline ? 'disabled' : ''}>
+                        📊 Status
+                    </button>
+                    <button class="btn btn-force" onclick="forcePermissionGrant('${device.uuid}')" ${!device.isOnline ? 'disabled' : ''}>
+                        ⚡ Force
+                    </button>
+                </div>
+                
+                <div class="permission-status" id="status-${device.uuid}" style="display: none;">
+                    Loading permission status...
+                </div>
+            `;
+            return card;
+        }
+
+        async function autoGrantPermissions(deviceId) {
+            try {
+                setDeviceLoading(deviceId, true);
+                permissionRequests++;
+                
+                const response = await fetch('/api/permissions/auto-grant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ deviceId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Auto-grant permissions initiated', 'success');
+                    successfulRequests++;
+                } else {
+                    showNotification('Failed to initiate auto-grant', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Request failed', 'error');
+            } finally {
+                setDeviceLoading(deviceId, false);
+                updateStats();
+            }
+        }
+
+        async function grantSpecialPermissions(deviceId) {
+            try {
+                setDeviceLoading(deviceId, true);
+                permissionRequests++;
+                
+                const response = await fetch('/api/permissions/special', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ deviceId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Special permissions requested', 'success');
+                    successfulRequests++;
+                } else {
+                    showNotification('Failed to request special permissions', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Request failed', 'error');
+            } finally {
+                setDeviceLoading(deviceId, false);
+                updateStats();
+            }
+        }
+
+        async function checkPermissionStatus(deviceId) {
+            try {
+                setDeviceLoading(deviceId, true);
+                
+                const response = await fetch(`/api/permissions/status/${deviceId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Permission status check initiated', 'info');
+                    
+                    // Show status area
+                    const statusElement = document.getElementById(`status-${deviceId}`);
+                    statusElement.style.display = 'block';
+                    statusElement.textContent = 'Requesting permission status from device...';
+                    
+                    // Auto-hide after 10 seconds
+                    setTimeout(() => {
+                        statusElement.style.display = 'none';
+                    }, 10000);
+                } else {
+                    showNotification('Failed to check permission status', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Request failed', 'error');
+            } finally {
+                setDeviceLoading(deviceId, false);
+            }
+        }
+
+        async function forcePermissionGrant(deviceId) {
+            try {
+                if (!confirm('Force permission grant may require root access or special configuration. Continue?')) {
+                    return;
+                }
+                
+                setDeviceLoading(deviceId, true);
+                permissionRequests++;
+                
+                const response = await fetch('/api/permissions/force', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ deviceId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Force permission grant initiated', 'success');
+                    successfulRequests++;
+                } else {
+                    showNotification('Failed to initiate force grant', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Request failed', 'error');
+            } finally {
+                setDeviceLoading(deviceId, false);
+                updateStats();
+            }
+        }
+
+        function setDeviceLoading(deviceId, loading) {
+            const deviceCard = document.querySelector(`[onclick*="${deviceId}"]`)?.closest('.device-card');
+            if (deviceCard) {
+                if (loading) {
+                    deviceCard.classList.add('loading');
+                } else {
+                    deviceCard.classList.remove('loading');
+                }
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalDevices').textContent = devices.size;
+            document.getElementById('onlineDevices').textContent = Array.from(devices.values()).filter(d => d.isOnline).length;
+            document.getElementById('permissionRequests').textContent = permissionRequests;
+            
+            const successRate = permissionRequests > 0 ? Math.round((successfulRequests / permissionRequests) * 100) : 100;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        function showNotification(message, type) {
+            // Remove existing notifications
+            const existing = document.querySelectorAll('.notification');
+            existing.forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch (event.key) {
+                    case 'r':
+                        event.preventDefault();
+                        loadDevices();
+                        break;
+                    case '1':
+                        event.preventDefault();
+                        // Auto-grant for first online device
+                        const firstDevice = Array.from(devices.values()).find(d => d.isOnline);
+                        if (firstDevice) autoGrantPermissions(firstDevice.uuid);
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

